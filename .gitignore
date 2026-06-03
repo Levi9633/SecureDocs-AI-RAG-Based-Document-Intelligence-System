@@ -1,0 +1,67 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environments and Secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Databases & Vector Stores
+*.sqlite3
+**/db.sqlite3
+**/faiss_index/
+
+# Python Cache & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.mypy_cache/
+.pytest_cache/
+test_verify_doc.txt
+
+# Frontend Dependencies and Builds
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+*.local
+
+# Specific Files and Directories Requested to Ignore
+RAG Interface.jpg
+/RAG Interface.jpg
+all workflows/
+/all workflows/
+
+# Media / Uploaded files
+**/media/uploaded_documents/
+**/media/faiss_index/
+securedocs_ai/backend/media/
+
+# Editor/System Files
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
