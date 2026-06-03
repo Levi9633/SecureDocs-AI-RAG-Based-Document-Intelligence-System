@@ -7,67 +7,89 @@
 [![Gemini](https://img.shields.io/badge/Gemini_API-2.5_Flash-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
 [![Groq](https://img.shields.io/badge/Groq_API-Llama_3.1-F55A42?style=for-the-badge)](https://groq.com)
 
-**SecureDocs AI** is a state-of-the-art Retrieval-Augmented Generation (RAG) system built with **Django REST Framework** (Backend) and **React + Vite** (Frontend). It allows users to upload documents (PDFs, Word documents, text files), automatically extracts and indexes their contents locally into a **FAISS** vector store using Sentence Transformers, and supports natural language conversations with detailed source citations. It features a advanced memory system that retains context from past conversation summaries (long-term memory) and the last 15 messages (short-term memory).
+**SecureDocs AI** is an enterprise-grade Retrieval-Augmented Generation (RAG) system built with **Django REST Framework** (Backend) and **React + Vite** (Frontend). It enables secure, local-first document indexing and context-grounded AI conversations. By combining sentence-level vector searches with a dual-layer memory architecture and multi-provider LLM fallbacks, SecureDocs AI delivers fast, highly reliable, and grounded answers with exact source citations.
 
 ---
 
-## 📸 Interface Preview
+## 🎨 User Interface & Experience
 
-The application features a modern, liquid radial-gradient glassmorphism UI designed for a premium user experience:
+The application is engineered with a modern, high-fidelity liquid glassmorphism interface, featuring micro-interactions and smooth state transitions.
 
-*   **Left Sidebar:** Manage active chat threads, create new chats, and list globally uploaded files.
-*   **Top Navigation Bar:** Manage overall system functions, review active configs, or clear documents globally.
-*   **Main Chat Window:** Enjoy clean, responsive chat bubbles, real-time message sending, and inline source citation cards showing the exact file chunks retrieved by the vector search.
+| Component | UI Design Styling | Functional Highlight |
+| :--- | :--- | :--- |
+| **🌌 Liquid Backdrop** | Custom HSL CSS Radial Gradients | Active background animation providing a premium depth-of-field experience. |
+| **⚡ Glassmorphic Sidebar** | CSS Backdrop-Filter (`blur`) & Flexbox | Interactive, collapsible repository layout managing all active chat threads and uploaded files. |
+| **💬 Streamlined Chat Window** | Dynamic Bubbles & Scroll Anchoring | Clean, alternating speech blocks with instant auto-scroll and auto-resizing text area. |
+| **🔖 Smart Citations** | Floating Source Cards & Badges | Highlights the exact document chunk retrieved by the vector engine, complete with metadata. |
 
 ---
 
-## ⚡ Key Features
+## ⚡ Core Technical Pillars
 
-*   **🧠 Advanced Context Memory (Dual-Layer):**
-    *   *Short-Term Memory:* Recalls the last 15 messages in the active chat thread for conversational flow.
-    *   *Long-Term Memory:* Generates and stores summaries of the last 5 chat threads to maintain overall context without bloating the prompt token count.
-*   **🔄 High-Availability LLM Fallback Pipeline:**
-    *   Primary LLM: **Gemini-2.5-Flash** (using the new `google-genai` SDK v1.x) with automatic retries for rate limits.
-    *   Secondary Fallback: Automatically downgrades to `gemini-3.5-flash` or `gemini-flash-latest`.
-    *   Failover Provider: If all Gemini models are exhausted, it automatically redirects requests to **Groq API** running `llama-3.1-8b-instant` to guarantee 100% uptime.
-*   **📂 Multiformat Document Processing:** Support for uploading `.txt`, `.pdf` (using `pdfplumber`), and `.docx` (using `python-docx`).
-*   **⚡ Offline Local Embeddings:** Utilizes `SentenceTransformer` (`all-MiniLM-L6-v2`) locally to compute 384-dimensional vector embeddings, saving API costs and processing chunks in milliseconds.
-*   **🔍 Vector Search with FAISS:** Indexes and performs similarity searches on text chunks, retrieving the top 4 matching sources with exact citation highlights.
-*   **📝 Auto-Title Generation:** Automatically generates descriptive, contextual chat titles from your first question.
+| Technical Pillar | Technology | Functional Specification |
+| :--- | :--- | :--- |
+| **🧠 Dual-Layer Memory** | `SQLite` + `Django ORM` | **Short-Term Context:** Retains the last 15 messages in the active thread for smooth conversation flow.<br>**Long-Term Context:** Auto-generates summaries of the 5 most recent chat sessions, injection-feeding historical context into new prompts. |
+| **🔄 High-Availability LLM** | `Gemini 2.5` ➔ `Groq API` | **Cascade Auto-Retry:** Cascades queries through `gemini-2.5-flash`, `gemini-3.5-flash`, and `gemini-flash-latest` with intelligent rate-limit retries.<br>**Failover Provider:** Automatically switches providers to Groq (`llama-3.1-8b-instant`) if Gemini limits are exhausted. |
+| **⚡ Offline Local Embeddings** | `SentenceTransformers` | **Zero API Costs:** Local processing of 384-dimensional text embeddings using the `all-MiniLM-L6-v2` model.<br>**Ultra-Fast Indexing:** High-speed vector generation running entirely on-device. |
+| **🔍 Vector Similarity Search** | `FAISS` (CPU) | **Chunk Retrieval:** Indexes doc chunks locally. When a question is asked, it queries the index and returns the top 4 matching document contexts. |
+| **📂 Document Ingest Pipeline** | `pdfplumber` + `python-docx` | **Multi-Format Extraction:** Automatically handles plain `.txt`, complex tables in `.pdf`, and headers/lists in `.docx` documents. |
+| **📝 Auto-Title Generator** | `google-genai` SDK | Uses the first user message in a chat to generate a concise, human-like title for the thread. |
 
 ---
 
 ## 🏗️ System Architecture & Workflow
 
-The diagram below represents the complete flow of data from when you upload a document to when a user asks a question and receives a grounded response:
+The diagram below outlines the full data flow—from document indexing to context retrieval and LLM response generation:
 
 ```mermaid
 graph TD
-    User([User]) <-->|Interacts| UI[React Frontend]
-    UI <-->|JSON / Multipart HTTP| Django[Django REST Framework]
+    %% Define CSS classes for custom nodes
+    classDef default fill:#111827,stroke:#374151,stroke-width:1px,color:#e5e7eb;
+    classDef highlight fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#f3f4f6;
+    classDef success fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#f3f4f6;
+    classDef warning fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#f3f4f6;
+
+    User([👤 User])
+    UI[🖥️ React Frontend]
+    Django[⚙️ Django REST Framework]
     
-    subgraph Django Backend Services
-        Django <-->|Read/Write| DB[(SQLite Database)]
-        Django -->|Extracts & Chunks| DocService[Document Service]
-        Django <-->|Assemble Prompt| RAGService[RAG Service]
+    subgraph DjangoBackend ["📦 Django Backend Services"]
+        DB[(🗄️ SQLite Database)]
+        DocService[📄 Document Service]
+        RAGService[🧠 RAG Service]
         
-        DocService -->|Compute 384-d Vectors| Embed[Sentence Transformers]
-        Embed -->|Store Embeddings| FAISS[(FAISS Index)]
+        DocService -->|Compute 384-d Vectors| Embed[sentence-transformers]
+        Embed -->|Store Embeddings| FAISS[(⚡ FAISS Vector Store)]
         
         RAGService -->|Query Match| FAISS
         RAGService -->|Fetch Last 15 Msgs| DB
         RAGService -->|Fetch Last 5 Summaries| DB
     end
 
-    subgraph LLM APIs (External Providers)
-        RAGService -->|Request Response| Gemini{Gemini API}
-        Gemini -.->|If Rate Limited / Down| Groq{Groq API Fallback}
-        Gemini -->|Returns grounded response| RAGService
-        Groq -->|Returns grounded response| RAGService
+    subgraph ExternalAPIs ["🌐 External AI Services (Fallback)"]
+        Gemini{♊ Gemini 2.5 Flash}
+        Groq{🔥 Groq Fallback}
     end
 
-    DB -->|chats, messages, summaries| Django
+    User <-->|Interacts| UI
+    UI <-->|JSON / Multipart HTTP| Django
+    Django <-->|Read/Write| DB
+    Django -->|Extracts & Chunks| DocService
+    Django <-->|Assemble Prompt| RAGService
+    
+    RAGService -->|Generate Content| Gemini
+    Gemini -.->|On Rate Limit / 429| Groq
+    Gemini -->|Return Response| RAGService
+    Groq -->|Return Response| RAGService
+    
+    DB -->|History & Memory| Django
     RAGService -->|Response + Citations| UI
+
+    %% Assign styles to nodes
+    class User,UI highlight;
+    class Django,RAGService,DocService default;
+    class FAISS,Embed success;
+    class Gemini,Groq warning;
 ```
 
 ---
@@ -81,8 +103,8 @@ securedocs_ai/
 │   ├── chats/              # Chat management, message histories & summaries
 │   ├── documents/          # Document uploads, text extraction pipelines
 │   ├── rag/                # Embeddings, chunking, FAISS indexer, LLM integrations
-│   ├── media/              # Dynamic uploaded documents & local FAISS indexes
-│   ├── db.sqlite3          # SQLite Database
+│   ├── media/              # Dynamic uploaded documents & local FAISS indexes (Git-ignored)
+│   ├── db.sqlite3          # SQLite Database (Git-ignored)
 │   ├── manage.py           # Django management CLI
 │   └── test_pipeline.py    # End-to-end backend verification pipeline
 └── frontend/
@@ -100,9 +122,8 @@ securedocs_ai/
 ## 🚀 Getting Started
 
 ### 📋 Prerequisites
-Ensure you have the following installed on your system:
-*   Python 3.9 or higher
-*   Node.js (v18 or higher) and npm
+*   **Python 3.9+** installed
+*   **Node.js (v18+)** and **npm** installed
 
 ---
 
@@ -113,7 +134,7 @@ Ensure you have the following installed on your system:
     cd securedocs_ai/backend
     ```
 
-2.  **Create and activate a Python virtual environment:**
+2.  **Create and activate a virtual environment:**
     *   **Windows (PowerShell):**
         ```powershell
         python -m venv venv
@@ -130,7 +151,7 @@ Ensure you have the following installed on your system:
     pip install -r requirements.txt
     ```
 
-4.  **Configure Environment Variables:**
+4.  **Configure environment variables:**
     *   Copy the `.env.example` template:
         ```bash
         cp .env.example .env
@@ -141,23 +162,22 @@ Ensure you have the following installed on your system:
         GROQ_API_KEY=your_actual_groq_key_here
         ```
 
-5.  **Run Database Migrations:**
+5.  **Run migrations:**
     ```bash
     python manage.py migrate
     ```
 
-6.  **Start the Django Development Server:**
+6.  **Start Django server:**
     ```bash
     python manage.py runserver
     ```
-    The backend will start running on **`http://127.0.0.1:8000`**.
+    Backend will run on **`http://127.0.0.1:8000`**.
 
 ---
 
 ### 💻 2. Frontend Setup
 
-1.  **Navigate to the frontend directory:**
-    *   Open a new terminal window/tab:
+1.  **Open a new terminal and navigate to the frontend directory:**
     ```bash
     cd securedocs_ai/frontend
     ```
@@ -167,26 +187,25 @@ Ensure you have the following installed on your system:
     npm install
     ```
 
-3.  **Start the Vite Local Server:**
+3.  **Start Vite dev server:**
     ```bash
     npm run dev
     ```
-    The frontend will start running on **`http://localhost:5173`**.
+    Frontend will run on **`http://localhost:5173`**.
 
 ---
 
 ## 🧪 Verification & Testing
 
-To run the full end-to-end pipeline verification test (which verifies Django routing, DB insertions, document extraction, vector indexing, chat history, auto-titling, memory, and LLM responses):
+To run the complete system verification suite (testing Django, database migrations, document extractors, FAISS vector indexing, memory systems, and LLM responses):
 
-1.  With the Django backend server running (`python manage.py runserver` in one window):
-2.  Open another terminal, enter the backend directory, and activate the virtual environment.
-3.  Run the verification pipeline:
+1.  Ensure the Django backend is running (`python manage.py runserver`).
+2.  Open another terminal, enter the `backend` directory, activate the virtual environment, and run:
     ```bash
     python test_pipeline.py
     ```
 
-If everything is configured correctly, you will see a success output:
+Successful run output:
 `[PASS] Gemini API responds` ... `ALL FEATURES VERIFIED AND WORKING!`
 
 ---
